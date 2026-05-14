@@ -172,7 +172,8 @@ export default function MapComponent() {
         window.addEventListener('imtos:highlight', onHighlight);
         window.addEventListener('imtos:reset', onReset);
 
-        map.fitBounds(layer.getBounds(), { padding: [20, 20] });
+        const isMobile = window.innerWidth < 768;
+        map.fitBounds(layer.getBounds(), { padding: isMobile ? [4, 4] : [20, 20] });
       } catch (err) {
         console.error('Map data error:', err);
       }

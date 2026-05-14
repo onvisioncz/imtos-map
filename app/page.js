@@ -37,7 +37,7 @@ export default function HomePage() {
       {/* ── MOBILE sidebar (below map) ── */}
       <aside
         className="md:hidden w-full shrink-0 flex flex-col z-10 order-2"
-        style={{ background: '#1a1917', height: '38vh' }}
+        style={{ background: '#1a1917', height: '26vh' }}
       >
         {/* Compact header */}
         <div className="flex items-center gap-3 px-4 py-2 shrink-0" style={{ background: '#3D3935' }}>
