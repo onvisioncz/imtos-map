@@ -173,7 +173,8 @@ export default function MapComponent() {
         window.addEventListener('imtos:reset', onReset);
 
         const isMobile = window.innerWidth < 768;
-        map.fitBounds(layer.getBounds(), { padding: isMobile ? [4, 4] : [20, 20] });
+        map.fitBounds(layer.getBounds(), { padding: isMobile ? [4, 4] : [20, 20], animate: false });
+        if (isMobile) map.setZoom(map.getZoom() + 1, { animate: false });
       } catch (err) {
         console.error('Map data error:', err);
       }
