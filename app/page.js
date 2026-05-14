@@ -33,7 +33,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-col md:flex-row h-screen overflow-hidden">
       {/* ── Sidebar ── */}
-      <aside className="w-full md:w-80 lg:w-96 shrink-0 flex flex-col z-10 overflow-hidden order-2 md:order-1 h-[52vh] md:h-full" style={{ background: '#1a1917' }}>
+      <aside className="w-full md:w-80 lg:w-96 shrink-0 flex flex-col z-10 overflow-hidden order-2 md:order-1 h-[44vh] md:h-full" style={{ background: '#1a1917' }}>
 
         {/* Logo block */}
         <div className="px-6 pt-7 pb-5" style={{ background: '#3D3935' }}>
