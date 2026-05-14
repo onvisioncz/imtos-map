@@ -70,7 +70,7 @@ export default function HomePage() {
           </div>
           <div className="mt-3 border-t border-white/10 pt-3">
             <p className="text-[11px] uppercase tracking-[0.18em] font-medium" style={{ color: '#9a948e' }}>
-              CNC Stroje a Technologie
+              Realizujeme vaše vize
             </p>
             <p className="text-[10px] tracking-wider mt-0.5" style={{ color: '#6b6460' }}>
               Mapa obchodního zastoupení
