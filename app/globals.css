@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes logo-pulse {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(212, 16, 41, 0.1)); }
+  50%       { filter: drop-shadow(0 0 12px rgba(212, 16, 41, 0.8)); }
+}
+
+.logo-pulse {
+  animation: logo-pulse 2.5s ease-in-out infinite;
+  will-change: filter;
+}
+
+.leaflet-tile-pane {
+  transition: opacity 0.6s ease;
+}
+
+/* Plynulé přechody na SVG regionech */
+.leaflet-overlay-pane path {
+  transition: fill 0.5s ease, fill-opacity 0.5s ease, stroke 0.3s ease, stroke-width 0.3s ease;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Leaflet popup overrides */
+.leaflet-popup-content-wrapper {
+  padding: 0 !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+  border: none !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  width: auto !important;
+}
+
+.leaflet-popup-tip {
+  background: #3D3935 !important;
+}
+
+.leaflet-popup-close-button {
+  color: #fff !important;
+  top: 8px !important;
+  right: 10px !important;
+  font-size: 18px !important;
+}
