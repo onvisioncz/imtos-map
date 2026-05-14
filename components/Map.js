@@ -174,7 +174,7 @@ export default function MapComponent() {
 
         const isMobile = window.innerWidth < 768;
         map.fitBounds(layer.getBounds(), { padding: isMobile ? [4, 4] : [20, 20], animate: false });
-        if (isMobile) map.setZoom(map.getZoom() + 0.5, { animate: false });
+        if (isMobile) map.setZoom(map.getZoom() + 0.25, { animate: false });
       } catch (err) {
         console.error('Map data error:', err);
       }
