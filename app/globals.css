@@ -18,7 +18,7 @@
 
 /* Plynulé přechody na SVG regionech */
 .leaflet-overlay-pane path {
-  transition: fill 0.9s ease-in-out, fill-opacity 0.9s ease-in-out, stroke 0.6s ease-in-out, stroke-width 0.6s ease-in-out;
+  transition: fill 1.4s ease-in-out, fill-opacity 1.4s ease-in-out, stroke 1s ease-in-out, stroke-width 1s ease-in-out;
 }
 
 html,

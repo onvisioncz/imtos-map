@@ -119,6 +119,16 @@ export default function MapComponent() {
           },
         }).addTo(map);
 
+        function applyStyleCss(fl, styles) {
+          fl.eachLayer ? fl.eachLayer((sub) => applyStyleCss(sub, styles)) : null;
+          const el = fl._path;
+          if (!el) return;
+          if (styles.fill) el.style.fill = styles.fill;
+          if (styles.fillOpacity !== undefined) el.style.fillOpacity = styles.fillOpacity;
+          if (styles.stroke) el.style.stroke = styles.stroke;
+          if (styles.strokeWidth !== undefined) el.style.strokeWidth = styles.strokeWidth;
+        }
+
         // Sidebar hover highlight
         function onHighlight(e) {
           const { repId } = e.detail;
@@ -130,27 +140,33 @@ export default function MapComponent() {
           tileLayer.setOpacity(0.18);
 
           Object.entries(featureLayers).forEach(([nutsId, fl]) => {
+            const el = fl._path;
+            if (!el) return;
             if (activeNuts.includes(nutsId)) {
-              // Všechny aktivní regiony v barvě tohoto obchodníka
-              fl.setStyle({
-                fillColor: rep.color,
-                fillOpacity: 0.82,
-                weight: 2,
-                color: '#ffffff',
-              });
+              el.style.fill = rep.color;
+              el.style.fillOpacity = '0.82';
+              el.style.stroke = '#ffffff';
+              el.style.strokeWidth = '2';
             } else {
-              fl.setStyle({
-                fillOpacity: 0.04,
-                weight: 0.5,
-                color: '#888',
-              });
+              el.style.fill = '#888888';
+              el.style.fillOpacity = '0.04';
+              el.style.stroke = '#888';
+              el.style.strokeWidth = '0.5';
             }
           });
         }
 
         function onReset() {
           tileLayer.setOpacity(1);
-          Object.values(featureLayers).forEach((fl) => layer.resetStyle(fl));
+          Object.entries(featureLayers).forEach(([, fl]) => {
+            const el = fl._path;
+            if (!el) return;
+            const def = getStyle(fl.feature);
+            el.style.fill = def.fillColor;
+            el.style.fillOpacity = String(def.fillOpacity);
+            el.style.stroke = def.color;
+            el.style.strokeWidth = String(def.weight);
+          });
         }
 
         window.addEventListener('imtos:highlight', onHighlight);
