@@ -31,9 +31,9 @@ export default function HomePage() {
   const skReps = allReps.filter((r) => r.region.includes('Slovensko'));
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex flex-col md:flex-row h-screen overflow-hidden">
       {/* ── Sidebar ── */}
-      <aside className="w-96 shrink-0 flex flex-col z-10 overflow-hidden" style={{ background: '#1a1917' }}>
+      <aside className="w-full md:w-80 lg:w-96 shrink-0 flex flex-col z-10 overflow-hidden order-2 md:order-1 h-[52vh] md:h-full" style={{ background: '#1a1917' }}>
 
         {/* Logo block */}
         <div className="px-6 pt-7 pb-5" style={{ background: '#3D3935' }}>
@@ -96,7 +96,7 @@ export default function HomePage() {
       </aside>
 
       {/* ── Map ── */}
-      <main className="flex-1 relative">
+      <main className="flex-1 relative order-1 md:order-2 min-h-0">
         <Map />
       </main>
     </div>
