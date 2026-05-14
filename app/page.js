@@ -46,7 +46,7 @@ export default function HomePage() {
           </div>
           <div className="border-l border-white/10 pl-3">
             <p className="text-[9px] uppercase tracking-[0.18em] font-medium" style={{ color: '#9a948e' }}>
-              CNC Stroje a Technologie
+              Mapa obchodního zastoupení
             </p>
             <p className="text-[8px] tracking-wider mt-0.5" style={{ color: '#6b6460' }}>
               Přejeďte pro zobrazení oblasti
