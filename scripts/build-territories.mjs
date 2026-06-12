@@ -44,10 +44,10 @@ const TERRITORIES = {
   prochazka: {
     name: 'Střední Morava a východní Čechy',
     reps: ['prochazka'],
-    psc: '517, 56–57, 68 (Uherskohradišťsko), 75–77',
+    psc: '517, 56–57, 68 (Uherskohradišťsko), 75–77, 796–798',
     okresy: [
       'Rychnov nad Kněžnou', 'Ústí nad Orlicí', 'Svitavy',
-      'Olomouc', 'Přerov', 'Vsetín',
+      'Olomouc', 'Prostějov', 'Přerov', 'Vsetín',
       'Zlín', 'Kroměříž', 'Uherské Hradiště',
     ],
   },
@@ -64,9 +64,9 @@ const TERRITORIES = {
   tosenovjan: {
     name: 'Severní Morava a Slezsko',
     reps: ['tosenovjan'],
-    psc: '70–74, 78–79',
+    psc: '70–74, 78, 790–795',
     okresy: [
-      'Šumperk', 'Jeseník', 'Bruntál', 'Prostějov',
+      'Šumperk', 'Jeseník', 'Bruntál',
       'Ostrava-město', 'Karviná', 'Frýdek-Místek', 'Nový Jičín', 'Opava',
     ],
   },
