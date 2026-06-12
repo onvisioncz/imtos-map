@@ -62,7 +62,7 @@
 
 /* Popisková vrstva měst — vyšší kontrast pro čitelnost na barevné výplni */
 .leaflet-labels-pane {
-  filter: contrast(1.35) brightness(0.92) drop-shadow(0 0 1px rgba(255, 255, 255, 0.85));
+  filter: contrast(1.2) brightness(0.95);
 }
 
 /* Tmavá maska okolo vybrané oblasti — plynulé objevení */

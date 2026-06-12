@@ -179,6 +179,7 @@ export default function MapComponent() {
 
         // Dark mask covering the whole world EXCEPT the focused territory
         let maskLayer = null;
+        let focusedFeature = null;
 
         function buildMaskRings(feature) {
           const world = [
@@ -194,6 +195,27 @@ export default function MapComponent() {
           return [world, ...holes];
         }
 
+        // Clip the town-labels pane to the focused territory — no labels outside
+        function updateLabelsClip() {
+          const pane = map.getPane('labels');
+          if (!focusedFeature) {
+            pane.style.clipPath = '';
+            return;
+          }
+          const geom = focusedFeature.geometry;
+          const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.coordinates;
+          const d = polys
+            .map((poly) => {
+              const pts = poly[0].map(([lng, lat]) => {
+                const p = map.latLngToLayerPoint([lat, lng]);
+                return `${Math.round(p.x)} ${Math.round(p.y)}`;
+              });
+              return `M${pts.join('L')}Z`;
+            })
+            .join('');
+          pane.style.clipPath = `path("${d}")`;
+        }
+
         function clearFocusVisuals() {
           map.getPane('tilePane').style.filter = '';
           tileLayer.setOpacity(1);
@@ -201,6 +223,9 @@ export default function MapComponent() {
             map.removeLayer(maskLayer);
             maskLayer = null;
           }
+          focusedFeature = null;
+          map.off('zoomend viewreset moveend', updateLabelsClip);
+          updateLabelsClip();
           if (map.hasLayer(labelsLayer)) map.removeLayer(labelsLayer);
           Object.values(featureLayers).forEach(applyDefault);
         }
@@ -208,21 +233,23 @@ export default function MapComponent() {
         function focusTerritory(feature, fl) {
           if (focusedId) clearFocusVisuals();
           focusedId = feature.properties.id;
+          focusedFeature = feature;
 
           // Panel with rep contact(s)
           panel.innerHTML = buildPanelHtml(feature);
           panel.style.display = 'block';
           panel.querySelector('.imtos-panel-close')?.addEventListener('click', closeFocus);
 
-          // Smooth zoom to territory
-          map.flyToBounds(fl.getBounds(), {
-            padding: isMobile() ? [12, 12] : [50, 50],
-            maxZoom: 9.5,
-            duration: 1.1,
-          });
+          // Smooth zoom to territory — INTEGER zoom so label tiles render crisp
+          const pad = isMobile() ? L.point(12, 12) : L.point(50, 50);
+          const targetZoom = Math.min(
+            Math.floor(map.getBoundsZoom(fl.getBounds(), false, pad)),
+            10
+          );
+          map.flyTo(fl.getBounds().getCenter(), targetZoom, { duration: 1.1 });
 
           // Blur the basemap, dim surrounding territories
-          map.getPane('tilePane').style.filter = 'blur(2.5px) saturate(0.6)';
+          map.getPane('tilePane').style.filter = 'blur(3px) saturate(0.55)';
           tileLayer.setOpacity(0.55);
 
           const rep = salesReps[feature.properties.reps[0]];
@@ -260,8 +287,10 @@ export default function MapComponent() {
           // Focused territory above the mask
           fl.bringToFront();
 
-          // Reveal smaller towns
+          // Reveal smaller towns — clipped to the territory only
           if (!map.hasLayer(labelsLayer)) labelsLayer.addTo(map);
+          updateLabelsClip();
+          map.on('zoomend viewreset moveend', updateLabelsClip);
         }
 
         function closeFocus() {
