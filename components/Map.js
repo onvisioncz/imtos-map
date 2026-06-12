@@ -18,23 +18,30 @@ function getStyle(feature) {
   };
 }
 
-function repCardHtml(rep) {
+const PHONE_SVG = (c) =>
+  `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.1 1.18 2 2 0 012.06 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>`;
+
+const MAIL_SVG = (c) =>
+  `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`;
+
+function repCardHtml(rep, isLast) {
   return `
-    <div style="margin-top:10px;padding:10px;background:#f8fafc;border-radius:6px;border-left:4px solid ${rep.color}">
-      <div style="display:flex;align-items:center;gap:10px">
-        ${rep.avatar
-          ? `<img src="${rep.avatar}" alt="${rep.name}" style="width:64px;height:64px;border-radius:8px;object-fit:cover;border:2px solid ${rep.color};flex-shrink:0"/>`
-          : `<div style="width:64px;height:64px;border-radius:8px;background:${rep.color};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;flex-shrink:0">${rep.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}</div>`
-        }
-        <div>
-          <div style="font-weight:700;font-size:13px;color:#1e293b">${rep.name}</div>
-          <div style="margin-top:4px;font-size:12px;color:#475569;line-height:1.7">
-            <div>📞 <a href="tel:${rep.phone.replace(/\s/g, '')}" style="color:#D41029;text-decoration:none">${rep.phone}</a></div>
-            <div>✉️ <a href="mailto:${rep.email}" style="color:#D41029;text-decoration:none">${rep.email}</a></div>
-          </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:14px 0 ${isLast ? '2px' : '14px'};${isLast ? '' : 'border-bottom:1px solid #f0efee'}">
+      ${rep.avatar
+        ? `<img src="${rep.avatar}" alt="${rep.name}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 1px #e7e5e4;flex-shrink:0"/>`
+        : `<div style="width:52px;height:52px;border-radius:50%;background:#f5f5f4;display:flex;align-items:center;justify-content:center;color:#78716c;font-weight:650;font-size:15px;flex-shrink:0">${rep.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}</div>`
+      }
+      <div style="min-width:0;flex:1">
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="width:8px;height:8px;border-radius:3px;background:${rep.color};flex-shrink:0"></span>
+          <span style="font-weight:650;font-size:13.5px;letter-spacing:-0.01em;color:#1c1917">${rep.name}</span>
         </div>
+        <div style="margin-top:7px;display:flex;flex-direction:column;gap:5px">
+          <a href="tel:${rep.phone.replace(/\s/g, '')}" style="display:flex;align-items:center;gap:8px;color:#44403c;font-size:12.5px;font-variant-numeric:tabular-nums;text-decoration:none">${PHONE_SVG('#a8a29e')}${rep.phone}</a>
+          <a href="mailto:${rep.email}" style="display:flex;align-items:center;gap:8px;color:#44403c;font-size:12.5px;text-decoration:none">${MAIL_SVG('#a8a29e')}${rep.email}</a>
+        </div>
+        <div style="margin-top:8px;color:#a8a29e;font-size:11px;font-variant-numeric:tabular-nums">PSČ ${rep.pscLabel}</div>
       </div>
-      <div style="margin-top:6px;color:#94a3b8;font-size:11px;padding-top:6px;border-top:1px solid #e2e8f0">PSČ: ${rep.pscLabel}</div>
     </div>`;
 }
 
@@ -44,16 +51,18 @@ function buildPanelHtml(feature) {
   const shared = reps.length > 1;
 
   return `
-    <div style="padding:12px 16px;background:#3D3935;color:#fff;display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
-      <div>
-        <div style="font-weight:700;font-size:15px">${name}</div>
-        <div style="font-size:11px;color:#b8b2ac;margin-top:2px">PSČ: ${psc}</div>
-        ${shared ? '<div style="font-size:11px;color:#ff7b8a;margin-top:2px">⚠ Oblast s více obchodníky</div>' : ''}
+    <div style="padding:16px 16px 13px 20px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid #e7e5e4">
+      <div style="min-width:0">
+        <div style="font-weight:700;font-size:15px;letter-spacing:-0.015em;color:#1c1917">${name}</div>
+        <div style="font-size:11.5px;color:#78716c;margin-top:3px;font-variant-numeric:tabular-nums">PSČ ${psc}</div>
+        ${shared ? '<div style="display:inline-block;margin-top:7px;font-size:10.5px;font-weight:650;letter-spacing:0.02em;color:#92400e;background:#fef3c7;border-radius:6px;padding:3px 8px">Oblast s více obchodníky</div>' : ''}
       </div>
-      <button class="imtos-panel-close" aria-label="Zavřít" style="background:none;border:none;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0 2px">×</button>
+      <button class="imtos-panel-close" aria-label="Zavřít">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
     </div>
-    <div style="padding:2px 14px 14px;background:#fff">
-      ${reps.map(repCardHtml).join('')}
+    <div style="padding:0 20px 8px">
+      ${reps.map((r, i) => repCardHtml(r, i === reps.length - 1)).join('')}
     </div>`;
 }
 
@@ -316,11 +325,14 @@ export default function MapComponent() {
 
             const reps = feature.properties.reps.map((id) => salesReps[id]).filter(Boolean);
             fl.bindTooltip(
-              `<div style="text-align:center">
-                 <div style="font-weight:700;font-size:12px;color:#1e293b">${feature.properties.name}</div>
-                 <div style="font-size:11px;color:#64748b;margin-top:1px">${reps.map((r) => r.name).join(' · ')}</div>
+              `<div style="text-align:left">
+                 <div style="font-weight:650;font-size:12.5px;letter-spacing:-0.01em;color:#1c1917">${feature.properties.name}</div>
+                 <div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#78716c;margin-top:3px">
+                   <span style="width:7px;height:7px;border-radius:2.5px;background:${salesReps[feature.properties.reps[0]]?.color};flex-shrink:0"></span>
+                   ${reps.map((r) => r.name).join(' · ')}
+                 </div>
                </div>`,
-              { sticky: true, direction: 'top', opacity: 0.95, className: 'imtos-tooltip' }
+              { sticky: true, direction: 'top', opacity: 1, className: 'imtos-tooltip' }
             );
 
             fl.on('click', (e) => {
@@ -393,12 +405,14 @@ export default function MapComponent() {
         const legend = L.control({ position: 'bottomleft' });
         legend.onAdd = () => {
           const div = L.DomUtil.create('div', 'imtos-legend');
-          div.innerHTML = Object.values(salesReps)
-            .map(
-              (r) =>
-                `<div class="imtos-legend-row"><span class="imtos-legend-dot" style="background:${r.color}"></span>${r.name}</div>`
-            )
-            .join('');
+          div.innerHTML =
+            '<div class="imtos-legend-title">Obchodní zastoupení</div>' +
+            Object.values(salesReps)
+              .map(
+                (r) =>
+                  `<div class="imtos-legend-row"><span class="imtos-legend-dot" style="background:${r.color}"></span>${r.name}</div>`
+              )
+              .join('');
           return div;
         };
         legend.addTo(map);
