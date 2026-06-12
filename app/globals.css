@@ -21,6 +21,53 @@
   transition: fill 1.4s ease-in-out, fill-opacity 1.4s ease-in-out, stroke 1s ease-in-out, stroke-width 1s ease-in-out;
 }
 
+/* Jemný stín pod územími — působí plastičtěji */
+.leaflet-overlay-pane svg {
+  filter: drop-shadow(0 2px 6px rgba(61, 57, 53, 0.25));
+}
+
+/* Legenda na mapě */
+.imtos-legend {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 11.5px;
+  color: #334155;
+  line-height: 1.9;
+}
+
+.imtos-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.imtos-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 767px) {
+  .imtos-legend {
+    display: none;
+  }
+}
+
+/* Tooltip při hoveru na území */
+.imtos-tooltip {
+  border-radius: 8px !important;
+  border: none !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18) !important;
+  padding: 7px 12px !important;
+}
+
 html,
 body {
   height: 100%;

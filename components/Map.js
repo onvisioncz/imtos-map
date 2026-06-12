@@ -2,42 +2,35 @@
 
 import { useEffect, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
-import { salesReps, nutsMapping } from '@/lib/data';
+import { salesReps } from '@/lib/data';
 
 function getStyle(feature) {
-  const mapping = nutsMapping[feature.properties.NUTS_ID];
-  if (!mapping) return { fillColor: '#9CA3AF', weight: 1, color: '#fff', fillOpacity: 0.3 };
-
-  const primary = salesReps[mapping.reps[0]];
-  const shared = mapping.reps.length > 1;
+  const { reps } = feature.properties;
+  const primary = salesReps[reps[0]];
+  const shared = reps.length > 1;
 
   return {
     fillColor: primary?.color ?? '#9CA3AF',
-    weight: 1.5,
+    weight: shared ? 2 : 1.5,
     color: '#ffffff',
-    fillOpacity: 0.72,
-    dashArray: shared ? '8 4' : '',
+    fillOpacity: 0.78,
+    dashArray: shared ? '8 5' : '',
   };
 }
 
 function buildPopup(feature) {
-  const mapping = nutsMapping[feature.properties.NUTS_ID];
-  const name = feature.properties.NUTS_NAME || feature.properties.NAME_LATN || '';
-
-  if (!mapping) {
-    return `<div style="padding:10px;font-family:sans-serif"><strong>${name}</strong><br/><span style="color:#888">Neobsazeno</span></div>`;
-  }
-
-  const reps = mapping.reps.map((id) => salesReps[id]).filter(Boolean);
+  const { name, psc, reps: repIds } = feature.properties;
+  const reps = repIds.map((id) => salesReps[id]).filter(Boolean);
   const shared = reps.length > 1;
 
   return `
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-width:320px;max-width:380px;">
       <div style="padding:10px 14px;background:#3D3935;color:#fff;margin:-1px -1px 0;border-radius:6px 6px 0 0">
         <div style="font-weight:700;font-size:14px">${name}</div>
-        ${shared ? '<div style="font-size:11px;color:#D41029;margin-top:2px">⚠ Oblast s více obchodníky</div>' : ''}
+        <div style="font-size:11px;color:#b8b2ac;margin-top:2px">PSČ: ${psc}</div>
+        ${shared ? '<div style="font-size:11px;color:#ff7b8a;margin-top:2px">⚠ Oblast s více obchodníky</div>' : ''}
       </div>
-      <div style="padding:10px 14px 14px;background:#fff">
+      <div style="padding:4px 14px 14px;background:#fff">
         ${reps
           .map(
             (rep) => `
@@ -70,46 +63,69 @@ export default function MapComponent() {
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Cleanup any leftover Leaflet instance (React StrictMode runs effects twice)
-    if (containerRef.current._leaflet_id) {
-      containerRef.current._leaflet_id = null;
-    }
-    if (mapRef.current) {
-      mapRef.current.remove();
-      mapRef.current = null;
-    }
+    // React StrictMode runs effects twice — cancelled flag stops the stale async run
+    let cancelled = false;
+    let onHighlight, onReset;
 
     (async () => {
       const L = (await import('leaflet')).default;
+      if (cancelled || !containerRef.current) return;
+
+      if (containerRef.current._leaflet_id) {
+        containerRef.current._leaflet_id = null;
+      }
 
       const map = L.map(containerRef.current, {
         center: [49.4, 17.2],
         zoom: 7,
         zoomControl: true,
+        zoomSnap: 0.25,
       });
 
       mapRef.current = map;
 
-      const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution:
-          '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 19,
-      }).addTo(map);
+      // Base tiles WITHOUT labels — colors stay clean
+      const tileLayer = L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
+        {
+          attribution:
+            '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/attributions">CARTO</a>',
+          subdomains: 'abcd',
+          maxZoom: 19,
+        }
+      ).addTo(map);
+
+      // Labels pane ABOVE the colored territories → city names readable on top
+      map.createPane('labels');
+      map.getPane('labels').style.zIndex = 650;
+      map.getPane('labels').style.pointerEvents = 'none';
+      const labelLayer = L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
+        { subdomains: 'abcd', maxZoom: 19, pane: 'labels' }
+      ).addTo(map);
 
       try {
-        const res = await fetch('/api/geodata');
-        if (!res.ok) throw new Error('API error');
+        const res = await fetch('/territories.json');
+        if (!res.ok) throw new Error('Data error');
         const geojson = await res.json();
+        if (cancelled) return;
 
-        // Store all sublayers by NUTS_ID for highlight control
         const featureLayers = {};
 
         const layer = L.geoJSON(geojson, {
           style: getStyle,
           onEachFeature(feature, fl) {
-            featureLayers[feature.properties.NUTS_ID] = fl;
+            featureLayers[feature.properties.id] = fl;
             fl.bindPopup(() => buildPopup(feature), { maxWidth: 400, className: 'imtos-popup' });
+
+            const reps = feature.properties.reps.map((id) => salesReps[id]).filter(Boolean);
+            fl.bindTooltip(
+              `<div style="text-align:center">
+                 <div style="font-weight:700;font-size:12px;color:#1e293b">${feature.properties.name}</div>
+                 <div style="font-size:11px;color:#64748b;margin-top:1px">${reps.map((r) => r.name).join(' · ')}</div>
+               </div>`,
+              { sticky: true, direction: 'top', opacity: 0.95, className: 'imtos-tooltip' }
+            );
 
             fl.on('mouseover', (e) => {
               e.target.setStyle({ weight: 3, color: '#3D3935', fillOpacity: 0.9 });
@@ -119,46 +135,36 @@ export default function MapComponent() {
           },
         }).addTo(map);
 
-        function applyStyleCss(fl, styles) {
-          fl.eachLayer ? fl.eachLayer((sub) => applyStyleCss(sub, styles)) : null;
-          const el = fl._path;
-          if (!el) return;
-          if (styles.fill) el.style.fill = styles.fill;
-          if (styles.fillOpacity !== undefined) el.style.fillOpacity = styles.fillOpacity;
-          if (styles.stroke) el.style.stroke = styles.stroke;
-          if (styles.strokeWidth !== undefined) el.style.strokeWidth = styles.strokeWidth;
-        }
-
-        // Sidebar hover highlight
-        function onHighlight(e) {
+        // ── Sidebar hover highlight (smooth via inline CSS on SVG paths) ──
+        onHighlight = (e) => {
           const { repId } = e.detail;
           const rep = salesReps[repId];
-          const activeNuts = Object.keys(nutsMapping).filter((id) =>
-            nutsMapping[id].reps.includes(repId)
-          );
+          if (!rep) return;
 
           tileLayer.setOpacity(0.18);
+          labelLayer.setOpacity(0.35);
 
-          Object.entries(featureLayers).forEach(([nutsId, fl]) => {
+          Object.values(featureLayers).forEach((fl) => {
             const el = fl._path;
             if (!el) return;
-            if (activeNuts.includes(nutsId)) {
+            if (fl.feature.properties.reps.includes(repId)) {
               el.style.fill = rep.color;
-              el.style.fillOpacity = '0.82';
+              el.style.fillOpacity = '0.85';
               el.style.stroke = '#ffffff';
               el.style.strokeWidth = '2';
             } else {
               el.style.fill = '#888888';
-              el.style.fillOpacity = '0.04';
-              el.style.stroke = '#888';
+              el.style.fillOpacity = '0.05';
+              el.style.stroke = '#999';
               el.style.strokeWidth = '0.5';
             }
           });
-        }
+        };
 
-        function onReset() {
+        onReset = () => {
           tileLayer.setOpacity(1);
-          Object.entries(featureLayers).forEach(([, fl]) => {
+          labelLayer.setOpacity(1);
+          Object.values(featureLayers).forEach((fl) => {
             const el = fl._path;
             if (!el) return;
             const def = getStyle(fl.feature);
@@ -167,21 +173,36 @@ export default function MapComponent() {
             el.style.stroke = def.color;
             el.style.strokeWidth = String(def.weight);
           });
-        }
+        };
 
         window.addEventListener('imtos:highlight', onHighlight);
         window.addEventListener('imtos:reset', onReset);
 
+        // ── Legend (desktop only, hidden via CSS on mobile) ──
+        const legend = L.control({ position: 'bottomleft' });
+        legend.onAdd = () => {
+          const div = L.DomUtil.create('div', 'imtos-legend');
+          div.innerHTML = Object.values(salesReps)
+            .map(
+              (r) =>
+                `<div class="imtos-legend-row"><span class="imtos-legend-dot" style="background:${r.color}"></span>${r.name}</div>`
+            )
+            .join('');
+          return div;
+        };
+        legend.addTo(map);
+
         const isMobile = window.innerWidth < 768;
-        map.fitBounds(layer.getBounds(), { padding: isMobile ? [4, 4] : [20, 20], animate: false });
+        map.fitBounds(layer.getBounds(), { padding: isMobile ? [4, 4] : [24, 24] });
       } catch (err) {
         console.error('Map data error:', err);
       }
     })();
 
     return () => {
-      window.removeEventListener('imtos:highlight', () => {});
-      window.removeEventListener('imtos:reset', () => {});
+      cancelled = true;
+      if (onHighlight) window.removeEventListener('imtos:highlight', onHighlight);
+      if (onReset) window.removeEventListener('imtos:reset', onReset);
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
