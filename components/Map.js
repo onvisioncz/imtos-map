@@ -95,14 +95,42 @@ export default function MapComponent() {
         }
       ).addTo(map);
 
-      // Labels pane ABOVE the colored territories → city names readable on top
-      map.createPane('labels');
-      map.getPane('labels').style.zIndex = 650;
-      map.getPane('labels').style.pointerEvents = 'none';
-      const labelLayer = L.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
-        { subdomains: 'abcd', maxZoom: 19, pane: 'labels' }
-      ).addTo(map);
+      // Cities pane ABOVE the colored territories
+      map.createPane('cities');
+      map.getPane('cities').style.zIndex = 650;
+      map.getPane('cities').style.pointerEvents = 'none';
+
+      // Města nad 100 000 obyvatel (CZ + SK)
+      const CITIES = [
+        { name: 'Praha', lat: 50.0755, lng: 14.4378 },
+        { name: 'Brno', lat: 49.1951, lng: 16.6068 },
+        { name: 'Ostrava', lat: 49.8209, lng: 18.2625 },
+        { name: 'Plzeň', lat: 49.7384, lng: 13.3736 },
+        { name: 'Liberec', lat: 50.7663, lng: 15.0543 },
+        { name: 'Olomouc', lat: 49.5938, lng: 17.2509 },
+        { name: 'Bratislava', lat: 48.1486, lng: 17.1077 },
+        { name: 'Košice', lat: 48.7164, lng: 21.2611 },
+      ];
+
+      CITIES.forEach((c) => {
+        L.circleMarker([c.lat, c.lng], {
+          pane: 'cities',
+          radius: 4.5,
+          fillColor: '#1f2937',
+          fillOpacity: 1,
+          color: '#ffffff',
+          weight: 2,
+          interactive: false,
+        })
+          .bindTooltip(c.name, {
+            permanent: true,
+            direction: 'right',
+            offset: [7, 0],
+            className: 'imtos-city-label',
+            pane: 'cities',
+          })
+          .addTo(map);
+      });
 
       try {
         const res = await fetch('/territories.json');
@@ -142,7 +170,6 @@ export default function MapComponent() {
           if (!rep) return;
 
           tileLayer.setOpacity(0.18);
-          labelLayer.setOpacity(0.35);
 
           Object.values(featureLayers).forEach((fl) => {
             const el = fl._path;
@@ -163,7 +190,6 @@ export default function MapComponent() {
 
         onReset = () => {
           tileLayer.setOpacity(1);
-          labelLayer.setOpacity(1);
           Object.values(featureLayers).forEach((fl) => {
             const el = fl._path;
             if (!el) return;

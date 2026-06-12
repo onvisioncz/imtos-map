@@ -60,6 +60,28 @@
   }
 }
 
+/* Popisky měst nad 100 000 obyvatel */
+.imtos-city-label {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1f2937;
+  text-shadow:
+    -1px -1px 0 rgba(255, 255, 255, 0.9),
+    1px -1px 0 rgba(255, 255, 255, 0.9),
+    -1px 1px 0 rgba(255, 255, 255, 0.9),
+    1px 1px 0 rgba(255, 255, 255, 0.9),
+    0 0 6px rgba(255, 255, 255, 0.8);
+  padding: 0 !important;
+}
+
+.imtos-city-label::before {
+  display: none;
+}
+
 /* Tooltip při hoveru na území */
 .imtos-tooltip {
   border-radius: 8px !important;
