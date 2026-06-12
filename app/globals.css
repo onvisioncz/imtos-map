@@ -60,6 +60,25 @@
   }
 }
 
+/* Popisková vrstva měst — vyšší kontrast pro čitelnost na barevné výplni */
+.leaflet-labels-pane {
+  filter: contrast(1.35) brightness(0.92) drop-shadow(0 0 1px rgba(255, 255, 255, 0.85));
+}
+
+/* Tmavá maska okolo vybrané oblasti — plynulé objevení */
+.imtos-mask {
+  animation: imtos-mask-in 0.9s ease-in-out;
+}
+
+@keyframes imtos-mask-in {
+  from {
+    fill-opacity: 0;
+  }
+  to {
+    fill-opacity: 0.45;
+  }
+}
+
 /* Plovoucí panel s detailem oblasti (focus mód) */
 .imtos-info-panel {
   position: absolute;

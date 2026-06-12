@@ -177,7 +177,36 @@ export default function MapComponent() {
           });
         }
 
+        // Dark mask covering the whole world EXCEPT the focused territory
+        let maskLayer = null;
+
+        function buildMaskRings(feature) {
+          const world = [
+            [-89, -179],
+            [89, -179],
+            [89, 179],
+            [-89, 179],
+          ];
+          const geom = feature.geometry;
+          const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.coordinates;
+          // Outer ring of each polygon becomes a hole in the world mask
+          const holes = polys.map((poly) => poly[0].map(([lng, lat]) => [lat, lng]));
+          return [world, ...holes];
+        }
+
+        function clearFocusVisuals() {
+          map.getPane('tilePane').style.filter = '';
+          tileLayer.setOpacity(1);
+          if (maskLayer) {
+            map.removeLayer(maskLayer);
+            maskLayer = null;
+          }
+          if (map.hasLayer(labelsLayer)) map.removeLayer(labelsLayer);
+          Object.values(featureLayers).forEach(applyDefault);
+        }
+
         function focusTerritory(feature, fl) {
+          if (focusedId) clearFocusVisuals();
           focusedId = feature.properties.id;
 
           // Panel with rep contact(s)
@@ -192,30 +221,44 @@ export default function MapComponent() {
             duration: 1.1,
           });
 
-          // Dim + blur everything else
-          map.getPane('tilePane').style.filter = 'blur(2.5px) saturate(0.65)';
-          tileLayer.setOpacity(0.5);
+          // Blur the basemap, dim surrounding territories
+          map.getPane('tilePane').style.filter = 'blur(2.5px) saturate(0.6)';
+          tileLayer.setOpacity(0.55);
 
           const rep = salesReps[feature.properties.reps[0]];
           Object.values(featureLayers).forEach((other) => {
             if (other.feature.properties.id === focusedId) {
+              // Lighter fill → town labels stay readable
               setFillStyles(other, {
                 fill: rep.color,
-                fillOpacity: '0.6',
+                fillOpacity: '0.42',
                 stroke: '#ffffff',
                 strokeWidth: '2.5',
                 filter: '',
               });
             } else {
               setFillStyles(other, {
-                fill: '#64748b',
-                fillOpacity: '0.45',
+                fill: '#475569',
+                fillOpacity: '0.4',
                 stroke: '#94a3b8',
                 strokeWidth: '0.5',
-                filter: 'blur(2px)',
+                filter: 'blur(2.5px)',
               });
             }
           });
+
+          // Dark veil over everything outside the focused territory
+          maskLayer = L.polygon(buildMaskRings(feature), {
+            fillColor: '#0f172a',
+            fillOpacity: 0.45,
+            fillRule: 'evenodd',
+            stroke: false,
+            className: 'imtos-mask',
+          }).addTo(map);
+          maskLayer.on('click', closeFocus);
+
+          // Focused territory above the mask
+          fl.bringToFront();
 
           // Reveal smaller towns
           if (!map.hasLayer(labelsLayer)) labelsLayer.addTo(map);
@@ -225,10 +268,7 @@ export default function MapComponent() {
           if (!focusedId) return;
           focusedId = null;
           panel.style.display = 'none';
-          map.getPane('tilePane').style.filter = '';
-          tileLayer.setOpacity(1);
-          if (map.hasLayer(labelsLayer)) map.removeLayer(labelsLayer);
-          Object.values(featureLayers).forEach(applyDefault);
+          clearFocusVisuals();
           map.flyToBounds(layer.getBounds(), {
             padding: isMobile() ? [4, 4] : [24, 24],
             duration: 1.0,
