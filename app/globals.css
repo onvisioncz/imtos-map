@@ -13,7 +13,7 @@
 }
 
 .leaflet-tile-pane {
-  transition: opacity 1.1s ease-in-out;
+  transition: opacity 1.1s ease-in-out, filter 0.9s ease-in-out;
 }
 
 /* Plynulé přechody na SVG regionech */
@@ -57,6 +57,33 @@
 @media (max-width: 767px) {
   .imtos-legend {
     display: none;
+  }
+}
+
+/* Plovoucí panel s detailem oblasti (focus mód) */
+.imtos-info-panel {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 1000;
+  width: min(360px, calc(100% - 28px));
+  max-height: calc(100% - 28px);
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.28);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  animation: imtos-panel-in 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes imtos-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
