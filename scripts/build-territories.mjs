@@ -42,23 +42,24 @@ const TERRITORIES = {
     okresy: ['Hlavní město Praha'],
   },
   prochazka: {
-    name: 'Střední Morava a východní Čechy',
+    name: 'Morava a východní Čechy',
     reps: ['prochazka'],
-    psc: '517, 56–57, 68 (Uherskohradišťsko), 75–77, 796–798',
+    psc: '517, 56–57, 60–66, 68–69, 75–77, 796–798',
     okresy: [
       'Rychnov nad Kněžnou', 'Ústí nad Orlicí', 'Svitavy',
+      'Brno-město', 'Brno-venkov', 'Blansko', 'Vyškov', 'Břeclav', 'Hodonín',
       'Olomouc', 'Prostějov', 'Přerov', 'Vsetín',
       'Zlín', 'Kroměříž', 'Uherské Hradiště',
     ],
   },
   dobrovolny: {
-    name: 'Vysočina a jižní Morava',
+    name: 'Vysočina a Pardubicko',
     reps: ['dobrovolny'],
-    psc: '53, 58–59, 60–69 (mimo Uherskohradišťsko)',
+    psc: '53, 58–59, 67 (Třebíčsko a Znojemsko)',
     okresy: [
       'Pardubice', 'Chrudim',
       'Havlíčkův Brod', 'Jihlava', 'Třebíč', 'Žďár nad Sázavou',
-      'Brno-město', 'Brno-venkov', 'Blansko', 'Vyškov', 'Znojmo', 'Břeclav', 'Hodonín',
+      'Znojmo',
     ],
   },
   tosenovjan: {
