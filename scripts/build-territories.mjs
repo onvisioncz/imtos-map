@@ -110,7 +110,7 @@ for (const [id, t] of Object.entries(TERRITORIES)) {
 // ── Slovakia: NUTS3 kraje from Eurostat ──
 console.log('Fetching SK kraje from Eurostat…');
 const EUROSTAT_URL =
-  'https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/NUTS_RG_20M_2021_4326_LEVL_3.geojson';
+  'https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/NUTS_RG_01M_2021_4326_LEVL_3.geojson';
 const res = await fetch(EUROSTAT_URL);
 if (!res.ok) throw new Error(`Eurostat ${res.status}`);
 const eurostat = await res.json();
@@ -137,6 +137,7 @@ for (const [id, g] of Object.entries(SK_GROUPS)) {
   if (feats.length !== g.nuts.length) throw new Error(`SK group ${id}: expected ${g.nuts.length}, got ${feats.length}`);
   console.log(`Merging ${id}: ${feats.length} krajov…`);
   let merged = dissolve(feats);
+  merged = turf.simplify(merged, { tolerance: 0.0015, highQuality: true });
   turf.truncate(merged, { precision: 5, coordinates: 2, mutate: true });
   outFeatures.push({
     type: 'Feature',
