@@ -225,7 +225,19 @@ export default function MapComponent() {
           pane.style.clipPath = `path("${d}")`;
         }
 
+        // Heavy visuals run AFTER the flight — the zoom animation stays smooth
+        let pendingEffects = null;
+
+        function cancelPendingEffects() {
+          if (pendingEffects) {
+            map.off('moveend', pendingEffects.run);
+            clearTimeout(pendingEffects.timer);
+            pendingEffects = null;
+          }
+        }
+
         function clearFocusVisuals() {
+          cancelPendingEffects();
           map.getPane('tilePane').style.filter = '';
           map.getPane('cities').style.display = '';
           tileLayer.setOpacity(1);
@@ -257,54 +269,69 @@ export default function MapComponent() {
           const targetZoom = isMobile()
             ? Math.min(Math.max(computed, 8), 10)
             : Math.min(Math.max(computed, 9), 10);
-          map.flyTo(fl.getBounds().getCenter(), targetZoom, { duration: 1.1 });
 
           // Hide our big-city markers — tile labels take over in detail view
           map.getPane('cities').style.display = 'none';
 
-          // Blur the basemap, dim surrounding territories
-          map.getPane('tilePane').style.filter = 'blur(3px) saturate(0.55)';
-          tileLayer.setOpacity(0.55);
+          const expectedId = focusedId;
+          const applyEffects = () => {
+            if (focusedId !== expectedId) return;
+            cancelPendingEffects();
 
-          const rep = salesReps[feature.properties.reps[0]];
-          Object.values(featureLayers).forEach((other) => {
-            if (other.feature.properties.id === focusedId) {
-              // Lighter fill → town labels stay readable
-              setFillStyles(other, {
-                fill: rep.color,
-                fillOpacity: '0.42',
-                stroke: '#ffffff',
-                strokeWidth: '2.5',
-                filter: '',
-              });
-            } else {
-              setFillStyles(other, {
-                fill: '#475569',
-                fillOpacity: '0.4',
-                stroke: '#94a3b8',
-                strokeWidth: '0.5',
-                filter: 'blur(2.5px)',
-              });
-            }
-          });
+            // Blur the basemap, dim surrounding territories
+            map.getPane('tilePane').style.filter = 'blur(3px) saturate(0.55)';
+            tileLayer.setOpacity(0.55);
 
-          // Dark veil over everything outside the focused territory
-          maskLayer = L.polygon(buildMaskRings(feature), {
-            fillColor: '#0f172a',
-            fillOpacity: 0.45,
-            fillRule: 'evenodd',
-            stroke: false,
-            className: 'imtos-mask',
-          }).addTo(map);
-          maskLayer.on('click', closeFocus);
+            const rep = salesReps[feature.properties.reps[0]];
+            Object.values(featureLayers).forEach((other) => {
+              if (other.feature.properties.id === expectedId) {
+                // Lighter fill → town labels stay readable
+                setFillStyles(other, {
+                  fill: rep.color,
+                  fillOpacity: '0.42',
+                  stroke: '#ffffff',
+                  strokeWidth: '2.5',
+                  filter: '',
+                });
+              } else {
+                setFillStyles(other, {
+                  fill: '#475569',
+                  fillOpacity: '0.4',
+                  stroke: '#94a3b8',
+                  strokeWidth: '0.5',
+                  filter: 'blur(2.5px)',
+                });
+              }
+            });
 
-          // Focused territory above the mask
-          fl.bringToFront();
+            // Dark veil over everything outside the focused territory
+            maskLayer = L.polygon(buildMaskRings(feature), {
+              fillColor: '#0f172a',
+              fillOpacity: 0.45,
+              fillRule: 'evenodd',
+              stroke: false,
+              className: 'imtos-mask',
+            }).addTo(map);
+            maskLayer.on('click', closeFocus);
 
-          // Reveal smaller towns — clipped to the territory only
-          if (!map.hasLayer(labelsLayer)) labelsLayer.addTo(map);
-          updateLabelsClip();
-          map.on('zoomend viewreset moveend', updateLabelsClip);
+            // Focused territory above the mask
+            fl.bringToFront();
+
+            // Reveal smaller towns — clipped to the territory only
+            if (!map.hasLayer(labelsLayer)) labelsLayer.addTo(map);
+            updateLabelsClip();
+            map.on('zoomend viewreset moveend', updateLabelsClip);
+          };
+
+          // Run effects when the flight lands (fallback timer if no moveend fires)
+          cancelPendingEffects();
+          pendingEffects = {
+            run: applyEffects,
+            timer: setTimeout(applyEffects, 1400),
+          };
+          map.once('moveend', pendingEffects.run);
+
+          map.flyTo(fl.getBounds().getCenter(), targetZoom, { duration: 1.1 });
         }
 
         function closeFocus() {
