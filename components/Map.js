@@ -218,6 +218,7 @@ export default function MapComponent() {
 
         function clearFocusVisuals() {
           map.getPane('tilePane').style.filter = '';
+          map.getPane('cities').style.display = '';
           tileLayer.setOpacity(1);
           if (maskLayer) {
             map.removeLayer(maskLayer);
@@ -240,13 +241,17 @@ export default function MapComponent() {
           panel.style.display = 'block';
           panel.querySelector('.imtos-panel-close')?.addEventListener('click', closeFocus);
 
-          // Smooth zoom to territory — INTEGER zoom so label tiles render crisp
+          // Smooth zoom to territory — INTEGER zoom so label tiles render crisp.
+          // Minimum 9 so town labels stay dense even for large territories.
           const pad = isMobile() ? L.point(12, 12) : L.point(50, 50);
-          const targetZoom = Math.min(
-            Math.floor(map.getBoundsZoom(fl.getBounds(), false, pad)),
-            10
-          );
+          const computed = Math.floor(map.getBoundsZoom(fl.getBounds(), false, pad));
+          const targetZoom = isMobile()
+            ? Math.min(Math.max(computed, 8), 10)
+            : Math.min(Math.max(computed, 9), 10);
           map.flyTo(fl.getBounds().getCenter(), targetZoom, { duration: 1.1 });
+
+          // Hide our big-city markers — tile labels take over in detail view
+          map.getPane('cities').style.display = 'none';
 
           // Blur the basemap, dim surrounding territories
           map.getPane('tilePane').style.filter = 'blur(3px) saturate(0.55)';
