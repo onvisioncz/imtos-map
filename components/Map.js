@@ -119,6 +119,11 @@ export default function MapComponent() {
       map.getPane('cities').style.zIndex = 650;
       map.getPane('cities').style.pointerEvents = 'none';
 
+      // Štítek oblasti (tooltip) nad popisky měst → box je čistě překryje
+      if (map.getPane('tooltipPane')) {
+        map.getPane('tooltipPane').style.zIndex = 690;
+      }
+
       // Města nad 100 000 obyvatel (CZ + SK)
       const CITIES = [
         { name: 'Praha', lat: 50.0755, lng: 14.4378 },
