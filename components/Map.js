@@ -438,16 +438,40 @@ export default function MapComponent() {
             }
           });
 
-          // Mobile: gently zoom to the selected rep's area (debounced for smooth swipe)
+          // Mobile: zoom + show the region label consistently (swipe i tap)
           if (zoom && isMobile()) {
+            const finite = (b) =>
+              b && [b.getWest(), b.getEast(), b.getSouth(), b.getNorth()].every(Number.isFinite);
+
             const bounds = L.latLngBounds([]);
+            let mainFl = null;
+            let maxArea = 0;
             Object.values(featureLayers).forEach((fl) => {
-              if (fl.feature.properties.reps.includes(repId)) bounds.extend(fl.getBounds());
+              if (!fl.feature.properties.reps.includes(repId)) return;
+              const b = fl.getBounds();
+              if (!finite(b)) return;
+              bounds.extend(b);
+              // Hlavní (největší) plocha obchodníka pro umístění štítku
+              if (fl.feature.properties.reps[0] === repId) {
+                const a = (b.getEast() - b.getWest()) * (b.getNorth() - b.getSouth());
+                if (a > maxArea) { maxArea = a; mainFl = fl; }
+              }
             });
-            if (bounds.isValid()) {
+
+            // Zavřít předchozí štítky a otevřít štítek vybrané oblasti nad jejím středem
+            Object.values(featureLayers).forEach((fl) => fl.closeTooltip());
+            const openLabel = () => {
+              if (mainFl && finite(mainFl.getBounds())) {
+                mainFl.openTooltip(mainFl.getBounds().getCenter());
+              }
+            };
+            openLabel();
+
+            if (bounds.isValid() && finite(bounds)) {
               clearTimeout(zoomDebounce);
               zoomDebounce = setTimeout(() => {
                 map.flyToBounds(bounds, { padding: [26, 26], maxZoom: 9, duration: 0.8 });
+                openLabel();
               }, 200);
             }
           }
@@ -457,7 +481,10 @@ export default function MapComponent() {
           if (focusedId) return;
           clearTimeout(zoomDebounce);
           tileLayer.setOpacity(1);
-          Object.values(featureLayers).forEach(applyDefault);
+          Object.values(featureLayers).forEach((fl) => {
+            fl.closeTooltip();
+            applyDefault(fl);
+          });
         };
 
         window.addEventListener('imtos:highlight', onHighlight);
