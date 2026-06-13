@@ -425,6 +425,8 @@ export default function MapComponent() {
           const rep = salesReps[repId];
           if (!rep) return;
 
+          const mobileZoom = zoom && isMobile();
+
           tileLayer.setOpacity(0.18);
 
           Object.values(featureLayers).forEach((fl) => {
@@ -432,7 +434,8 @@ export default function MapComponent() {
             if (!el) return;
             if (fl.feature.properties.reps.includes(repId)) {
               el.style.fill = rep.color;
-              el.style.fillOpacity = '0.85';
+              // Na mobilu lehčí výplň → čitelné popisky měst při zoomu
+              el.style.fillOpacity = mobileZoom ? '0.5' : '0.85';
               el.style.stroke = '#ffffff';
               el.style.strokeWidth = '2';
             } else {
@@ -472,11 +475,30 @@ export default function MapComponent() {
             };
             openLabel();
 
+            // Odhalit menší obce (popisky), schovat velké značky kvůli duplicitě,
+            // oříznout popisky na vybranou oblast — při dalším zoomu se ukáže víc měst
+            map.getPane('cities').style.display = 'none';
+            if (mainFl) {
+              focusedFeature = mainFl.feature;
+              if (!map.hasLayer(labelsLayer)) labelsLayer.addTo(map);
+              updateLabelsClip();
+              map.off('zoomend viewreset moveend', updateLabelsClip);
+              map.on('zoomend viewreset moveend', updateLabelsClip);
+            }
+
             if (bounds.isValid() && finite(bounds)) {
               clearTimeout(zoomDebounce);
               zoomDebounce = setTimeout(() => {
-                map.flyToBounds(bounds, { padding: [26, 26], maxZoom: 9, duration: 0.8 });
+                const size = map.getSize();
+                if (size.x > 0 && size.y > 0) {
+                  try {
+                    map.flyToBounds(bounds, { padding: [26, 26], maxZoom: 9, duration: 0.8 });
+                  } catch (err) {
+                    /* mapa ještě nemá rozměry — ignoruj */
+                  }
+                }
                 openLabel();
+                updateLabelsClip();
               }, 200);
             }
           }
@@ -486,6 +508,11 @@ export default function MapComponent() {
           if (focusedId) return;
           clearTimeout(zoomDebounce);
           tileLayer.setOpacity(1);
+          map.getPane('cities').style.display = '';
+          focusedFeature = null;
+          map.off('zoomend viewreset moveend', updateLabelsClip);
+          if (map.hasLayer(labelsLayer)) map.removeLayer(labelsLayer);
+          updateLabelsClip();
           Object.values(featureLayers).forEach((fl) => {
             fl.closeTooltip();
             applyDefault(fl);
