@@ -125,6 +125,7 @@ export default function MapComponent() {
         { name: 'Brno', lat: 49.1951, lng: 16.6068 },
         { name: 'Ostrava', lat: 49.8209, lng: 18.2625 },
         { name: 'Plzeň', lat: 49.7384, lng: 13.3736 },
+        { name: 'Karlovy Vary', lat: 50.2310, lng: 12.8716 },
         { name: 'Liberec', lat: 50.7663, lng: 15.0543 },
         { name: 'Olomouc', lat: 49.5938, lng: 17.2509 },
         { name: 'Jihlava', lat: 49.3961, lng: 15.5912 },
