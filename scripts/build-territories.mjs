@@ -94,6 +94,7 @@ function dissolve(features) {
 const outFeatures = [];
 
 for (const [id, t] of Object.entries(TERRITORIES)) {
+  if (id === 'praha') continue; // Praha se dělí zvlášť (viz níže)
   const feats = okresy.features
     .filter((f) => t.okresy.includes(f.name))
     .map((f) => turf.feature(f.geometry));
@@ -106,6 +107,32 @@ for (const [id, t] of Object.entries(TERRITORIES)) {
     type: 'Feature',
     properties: { id, name: t.name, reps: t.reps, psc: t.psc, country: 'CZ' },
     geometry: merged.geometry,
+  });
+}
+
+// ── Praha rozdělena na sever (David) a jih (Kolář) ──
+{
+  const prahaSrc = okresy.features.find((f) => f.name === 'Hlavní město Praha');
+  const prahaGeom = turf.feature(prahaSrc.geometry);
+  const pb = turf.bbox(prahaGeom); // [minX, minY, maxX, maxY]
+  const midY = (pb[1] + pb[3]) / 2;
+  const pad = 0.05;
+  const northBox = turf.bboxPolygon([pb[0] - pad, midY, pb[2] + pad, pb[3] + pad]);
+  const southBox = turf.bboxPolygon([pb[0] - pad, pb[1] - pad, pb[2] + pad, midY]);
+  const north = turf.intersect(turf.featureCollection([prahaGeom, northBox]));
+  const south = turf.intersect(turf.featureCollection([prahaGeom, southBox]));
+  turf.truncate(north, { precision: 5, coordinates: 2, mutate: true });
+  turf.truncate(south, { precision: 5, coordinates: 2, mutate: true });
+  console.log('Splitting Praha → sever (david) + jih (kolar)…');
+  outFeatures.push({
+    type: 'Feature',
+    properties: { id: 'praha-sever', name: 'Praha (sever)', reps: ['david'], psc: '1xx — severní část', country: 'CZ' },
+    geometry: north.geometry,
+  });
+  outFeatures.push({
+    type: 'Feature',
+    properties: { id: 'praha-jih', name: 'Praha (jih)', reps: ['kolar'], psc: '1xx — jižní část', country: 'CZ' },
+    geometry: south.geometry,
   });
 }
 
