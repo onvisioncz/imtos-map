@@ -20,7 +20,7 @@ const TERRITORIES = {
       'Děčín', 'Ústí nad Labem', 'Teplice', 'Litoměřice', 'Chomutov', 'Most', 'Louny',
       'Česká Lípa', 'Liberec', 'Jablonec nad Nisou', 'Semily',
       'Hradec Králové', 'Jičín', 'Náchod', 'Trutnov',
-      'Mladá Boleslav', 'Kladno', 'Mělník', 'Rakovník',
+      'Mladá Boleslav', 'Kladno', 'Mělník', 'Rakovník', 'Praha-východ',
     ],
   },
   kolar: {
@@ -31,7 +31,7 @@ const TERRITORIES = {
       'Plzeň-město', 'Plzeň-jih', 'Plzeň-sever', 'Rokycany', 'Tachov', 'Domažlice', 'Klatovy',
       'České Budějovice', 'Český Krumlov', 'Jindřichův Hradec', 'Písek', 'Prachatice', 'Strakonice', 'Tábor',
       'Pelhřimov',
-      'Beroun', 'Příbram', 'Benešov', 'Praha-východ', 'Praha-západ',
+      'Beroun', 'Příbram', 'Benešov', 'Praha-západ',
       'Kolín', 'Kutná Hora', 'Nymburk',
     ],
   },
