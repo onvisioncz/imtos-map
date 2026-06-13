@@ -127,6 +127,7 @@ export default function MapComponent() {
         { name: 'Plzeň', lat: 49.7384, lng: 13.3736 },
         { name: 'Liberec', lat: 50.7663, lng: 15.0543 },
         { name: 'Olomouc', lat: 49.5938, lng: 17.2509 },
+        { name: 'Jihlava', lat: 49.3961, lng: 15.5912 },
         { name: 'Bratislava', lat: 48.1486, lng: 17.1077 },
         { name: 'Košice', lat: 48.7164, lng: 21.2611 },
       ];
