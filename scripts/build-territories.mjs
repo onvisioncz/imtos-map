@@ -97,7 +97,8 @@ const outFeatures = [];
 for (const [id, t] of Object.entries(TERRITORIES)) {
   if (id === 'praha') continue; // Praha se dělí zvlášť (viz níže)
   const feats = okresy.features
-    .filter((f) => t.okresy.includes(f.name))
+    // Šumperk se dělí zvlášť (jih → Procházka), tady ho vynecháme
+    .filter((f) => t.okresy.includes(f.name) && f.name !== 'Šumperk')
     .map((f) => turf.feature(f.geometry));
   console.log(`Merging ${id}: ${feats.length} okresů…`);
   let merged = dissolve(feats);
@@ -146,6 +147,31 @@ for (const [id, t] of Object.entries(TERRITORIES)) {
     properties: { id: 'praha-jih', name: 'Praha (jih)', reps: ['kolar'], psc: '1xx jih + Praha-západ', country: 'CZ' },
     geometry: south.geometry,
   });
+}
+
+// ── Šumperk rozdělen: jih (Mohelnice, Zábřeh) → Procházka, sever → Tošenovjan ──
+{
+  const sumperk = turf.feature(okresy.features.find((f) => f.name === 'Šumperk').geometry);
+  const sb = turf.bbox(sumperk);
+  const splitLat = 49.93; // Zábřeh (49.88) a Mohelnice (49.78) jih; Šumperk (49.97) sever
+  const pad = 0.15;
+  const northBox = turf.bboxPolygon([sb[0] - pad, splitLat, sb[2] + pad, sb[3] + pad]);
+  const southBox = turf.bboxPolygon([sb[0] - pad, sb[1] - pad, sb[2] + pad, splitLat]);
+  const sNorth = turf.intersect(turf.featureCollection([sumperk, northBox]));
+  const sSouth = turf.intersect(turf.featureCollection([sumperk, southBox]));
+
+  const tosFeature = outFeatures.find((f) => f.properties.id === 'tosenovjan');
+  const proFeature = outFeatures.find((f) => f.properties.id === 'prochazka');
+
+  let tosGeom = turf.union(turf.featureCollection([turf.feature(tosFeature.geometry), sNorth]));
+  let proGeom = turf.union(turf.featureCollection([turf.feature(proFeature.geometry), sSouth]));
+  tosGeom = turf.simplify(tosGeom, { tolerance: 0.0005, highQuality: true });
+  proGeom = turf.simplify(proGeom, { tolerance: 0.0005, highQuality: true });
+  turf.truncate(tosGeom, { precision: 5, coordinates: 2, mutate: true });
+  turf.truncate(proGeom, { precision: 5, coordinates: 2, mutate: true });
+  tosFeature.geometry = tosGeom.geometry;
+  proFeature.geometry = proGeom.geometry;
+  console.log('Splitting Šumperk → jih (prochazka) + sever (tosenovjan)…');
 }
 
 // ── Slovakia: NUTS3 kraje from Eurostat ──
