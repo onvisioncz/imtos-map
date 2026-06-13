@@ -20,7 +20,7 @@ const TERRITORIES = {
       'Děčín', 'Ústí nad Labem', 'Teplice', 'Litoměřice', 'Chomutov', 'Most', 'Louny',
       'Česká Lípa', 'Liberec', 'Jablonec nad Nisou', 'Semily',
       'Hradec Králové', 'Jičín', 'Náchod', 'Trutnov',
-      'Mladá Boleslav', 'Kladno', 'Mělník', 'Rakovník', 'Praha-východ',
+      'Mladá Boleslav', 'Kladno', 'Mělník', 'Rakovník',
     ],
   },
   kolar: {
@@ -31,15 +31,16 @@ const TERRITORIES = {
       'Plzeň-město', 'Plzeň-jih', 'Plzeň-sever', 'Rokycany', 'Tachov', 'Domažlice', 'Klatovy',
       'České Budějovice', 'Český Krumlov', 'Jindřichův Hradec', 'Písek', 'Prachatice', 'Strakonice', 'Tábor',
       'Pelhřimov',
-      'Beroun', 'Příbram', 'Benešov', 'Praha-západ',
+      'Beroun', 'Příbram', 'Benešov',
       'Kolín', 'Kutná Hora', 'Nymburk',
     ],
   },
   praha: {
+    // Celá pražská aglomerace — rozdělí se vodorovně (sever David, jih Kolář)
     name: 'Praha',
     reps: ['kolar', 'david'],
     psc: '1xx',
-    okresy: ['Hlavní město Praha'],
+    okresy: ['Hlavní město Praha', 'Praha-západ', 'Praha-východ'],
   },
   prochazka: {
     name: 'Morava a východní Čechy',
@@ -110,28 +111,39 @@ for (const [id, t] of Object.entries(TERRITORIES)) {
   });
 }
 
-// ── Praha rozdělena na sever (David) a jih (Kolář) ──
+// ── Pražská aglomerace (Praha + Praha-západ + Praha-východ) ──
+// Vodorovný řez na úrovni středu hl. m. Prahy: sever → David, jih → Kolář.
 {
-  const prahaSrc = okresy.features.find((f) => f.name === 'Hlavní město Praha');
-  const prahaGeom = turf.feature(prahaSrc.geometry);
-  const pb = turf.bbox(prahaGeom); // [minX, minY, maxX, maxY]
-  const midY = (pb[1] + pb[3]) / 2;
-  const pad = 0.05;
-  const northBox = turf.bboxPolygon([pb[0] - pad, midY, pb[2] + pad, pb[3] + pad]);
-  const southBox = turf.bboxPolygon([pb[0] - pad, pb[1] - pad, pb[2] + pad, midY]);
-  const north = turf.intersect(turf.featureCollection([prahaGeom, northBox]));
-  const south = turf.intersect(turf.featureCollection([prahaGeom, southBox]));
+  const aggNames = ['Hlavní město Praha', 'Praha-západ', 'Praha-východ'];
+  const aggFeats = okresy.features
+    .filter((f) => aggNames.includes(f.name))
+    .map((f) => turf.feature(f.geometry));
+  let agg = dissolve(aggFeats);
+  agg = turf.simplify(agg, { tolerance: 0.0005, highQuality: true });
+
+  // Dělicí zeměpisná šířka = střed hl. m. Prahy
+  const cityGeom = turf.feature(
+    okresy.features.find((f) => f.name === 'Hlavní město Praha').geometry
+  );
+  const splitLat = turf.centroid(cityGeom).geometry.coordinates[1];
+
+  const ab = turf.bbox(agg);
+  const pad = 0.1;
+  const northBox = turf.bboxPolygon([ab[0] - pad, splitLat, ab[2] + pad, ab[3] + pad]);
+  const southBox = turf.bboxPolygon([ab[0] - pad, ab[1] - pad, ab[2] + pad, splitLat]);
+  const north = turf.intersect(turf.featureCollection([agg, northBox]));
+  const south = turf.intersect(turf.featureCollection([agg, southBox]));
   turf.truncate(north, { precision: 5, coordinates: 2, mutate: true });
   turf.truncate(south, { precision: 5, coordinates: 2, mutate: true });
-  console.log('Splitting Praha → sever (david) + jih (kolar)…');
+  console.log('Splitting Praha agglomeration → sever (david) + jih (kolar)…');
   outFeatures.push({
     type: 'Feature',
-    properties: { id: 'praha-sever', name: 'Praha (sever)', reps: ['david'], psc: '1xx — severní část', country: 'CZ' },
+    properties: { id: 'praha-sever', name: 'Praha (sever)', reps: ['david'], psc: '1xx sever + Praha-východ', country: 'CZ' },
     geometry: north.geometry,
   });
   outFeatures.push({
     type: 'Feature',
-    properties: { id: 'praha-jih', name: 'Praha (jih)', reps: ['kolar'], psc: '1xx — jižní část', country: 'CZ' },
+    properties: { id: 'praha-jih', name: 'Praha (jih)', reps: ['kolar'], psc: '1xx jih + Praha-západ', country: 'CZ' },
     geometry: south.geometry,
   });
 }
