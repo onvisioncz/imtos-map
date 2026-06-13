@@ -20,7 +20,7 @@ const TERRITORIES = {
       'Děčín', 'Ústí nad Labem', 'Teplice', 'Litoměřice', 'Chomutov', 'Most', 'Louny',
       'Česká Lípa', 'Liberec', 'Jablonec nad Nisou', 'Semily',
       'Hradec Králové', 'Jičín', 'Náchod', 'Trutnov',
-      'Mladá Boleslav', 'Kladno', 'Mělník',
+      'Mladá Boleslav', 'Kladno', 'Mělník', 'Rakovník',
     ],
   },
   kolar: {
@@ -31,7 +31,7 @@ const TERRITORIES = {
       'Plzeň-město', 'Plzeň-jih', 'Plzeň-sever', 'Rokycany', 'Tachov', 'Domažlice', 'Klatovy',
       'České Budějovice', 'Český Krumlov', 'Jindřichův Hradec', 'Písek', 'Prachatice', 'Strakonice', 'Tábor',
       'Pelhřimov',
-      'Beroun', 'Příbram', 'Rakovník', 'Benešov', 'Praha-východ', 'Praha-západ',
+      'Beroun', 'Příbram', 'Benešov', 'Praha-východ', 'Praha-západ',
       'Kolín', 'Kutná Hora', 'Nymburk',
     ],
   },
@@ -99,7 +99,8 @@ for (const [id, t] of Object.entries(TERRITORIES)) {
     .map((f) => turf.feature(f.geometry));
   console.log(`Merging ${id}: ${feats.length} okresů…`);
   let merged = dissolve(feats);
-  merged = turf.simplify(merged, { tolerance: 0.0015, highQuality: true });
+  // Jemnější zjednodušení → věrnější obrys (např. výběžek u Aše na západě)
+  merged = turf.simplify(merged, { tolerance: 0.0005, highQuality: true });
   turf.truncate(merged, { precision: 5, coordinates: 2, mutate: true });
   outFeatures.push({
     type: 'Feature',
