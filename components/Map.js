@@ -128,8 +128,16 @@ export default function MapComponent() {
         { name: 'Liberec', lat: 50.7663, lng: 15.0543 },
         { name: 'Olomouc', lat: 49.5938, lng: 17.2509 },
         { name: 'Jihlava', lat: 49.3961, lng: 15.5912 },
+        { name: 'České Budějovice', lat: 48.9745, lng: 14.4744 },
+        { name: 'Ústí nad Labem', lat: 50.6607, lng: 14.0323 },
+        { name: 'Hradec Králové', lat: 50.2092, lng: 15.8328 },
+        { name: 'Zlín', lat: 49.2264, lng: 17.6707 },
         { name: 'Bratislava', lat: 48.1486, lng: 17.1077 },
         { name: 'Košice', lat: 48.7164, lng: 21.2611 },
+        { name: 'Trnava', lat: 48.3774, lng: 17.5877 },
+        { name: 'Žilina', lat: 49.2231, lng: 18.7394 },
+        { name: 'Banská Bystrica', lat: 48.7395, lng: 19.1453 },
+        { name: 'Prešov', lat: 48.9985, lng: 21.2339 },
       ];
 
       const cityMarkers = [];
