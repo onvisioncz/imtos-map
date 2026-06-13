@@ -76,7 +76,7 @@ export default function HomePage() {
               Mapa obchodního zastoupení
             </p>
             <p className="mt-0.5" style={{ color: 'var(--text-low)', fontSize: 9, fontWeight: 450 }}>
-              Přejeďte pro zobrazení oblasti
+              Vyberte oblast svého obchodníka
             </p>
           </div>
         </div>

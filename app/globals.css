@@ -250,6 +250,33 @@ body {
   font-family: var(--font-ui);
 }
 
+/* ── Tlačítko oddálení (jen mobil) ── */
+.imtos-zoomout {
+  display: none;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-hairline);
+  border-radius: 11px;
+  color: var(--panel-text);
+  box-shadow: 0 4px 14px rgba(28, 25, 23, 0.14);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 150ms ease;
+}
+
+.imtos-zoomout:active {
+  background: #f5f5f4;
+}
+
+@media (max-width: 767px) {
+  .imtos-zoomout {
+    display: flex;
+  }
+}
+
 /* Leaflet popup overrides (fallback) */
 .leaflet-popup-content-wrapper {
   padding: 0 !important;

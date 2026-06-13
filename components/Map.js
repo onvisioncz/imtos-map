@@ -160,6 +160,7 @@ export default function MapComponent() {
 
         const featureLayers = {};
         let focusedId = null;
+        let zoomDebounce = null;
 
         // Floating info panel (top-right corner of the map)
         const panel = L.DomUtil.create('div', 'imtos-info-panel', map.getContainer());
@@ -364,6 +365,15 @@ export default function MapComponent() {
 
             fl.on('click', (e) => {
               L.DomEvent.stopPropagation(e);
+              if (isMobile()) {
+                // Mobile: pick the rep in the bottom strip — no covering panel
+                window.dispatchEvent(
+                  new CustomEvent('imtos:selectRep', {
+                    detail: { repId: feature.properties.reps[0] },
+                  })
+                );
+                return;
+              }
               if (focusedId === feature.properties.id) {
                 closeFocus();
               } else {
@@ -396,7 +406,7 @@ export default function MapComponent() {
         // ── Sidebar hover highlight (smooth via inline CSS on SVG paths) ──
         onHighlight = (e) => {
           if (focusedId) return;
-          const { repId } = e.detail;
+          const { repId, zoom } = e.detail;
           const rep = salesReps[repId];
           if (!rep) return;
 
@@ -417,10 +427,25 @@ export default function MapComponent() {
               el.style.strokeWidth = '0.5';
             }
           });
+
+          // Mobile: gently zoom to the selected rep's area (debounced for smooth swipe)
+          if (zoom && isMobile()) {
+            const bounds = L.latLngBounds([]);
+            Object.values(featureLayers).forEach((fl) => {
+              if (fl.feature.properties.reps.includes(repId)) bounds.extend(fl.getBounds());
+            });
+            if (bounds.isValid()) {
+              clearTimeout(zoomDebounce);
+              zoomDebounce = setTimeout(() => {
+                map.flyToBounds(bounds, { padding: [26, 26], maxZoom: 9, duration: 0.8 });
+              }, 200);
+            }
+          }
         };
 
         onReset = () => {
           if (focusedId) return;
+          clearTimeout(zoomDebounce);
           tileLayer.setOpacity(1);
           Object.values(featureLayers).forEach(applyDefault);
         };
@@ -443,6 +468,23 @@ export default function MapComponent() {
           return div;
         };
         legend.addTo(map);
+
+        // ── Zoom-out / celá mapa (jen mobil, přes CSS) ──
+        const zoomOut = L.control({ position: 'topright' });
+        zoomOut.onAdd = () => {
+          const btn = L.DomUtil.create('button', 'imtos-zoomout');
+          btn.type = 'button';
+          btn.setAttribute('aria-label', 'Oddálit na celou mapu');
+          btn.innerHTML =
+            '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+          L.DomEvent.disableClickPropagation(btn);
+          L.DomEvent.on(btn, 'click', () => {
+            clearTimeout(zoomDebounce);
+            map.flyToBounds(layer.getBounds(), { padding: [12, 12], duration: 0.9 });
+          });
+          return btn;
+        };
+        zoomOut.addTo(map);
 
         map.fitBounds(layer.getBounds(), { padding: isMobile() ? [4, 4] : [24, 24] });
       } catch (err) {
