@@ -34,7 +34,7 @@ export default function SidebarRepCard({ rep }) {
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
       className="group rounded-xl cursor-pointer px-3 py-2.5 -mx-1"
-      style={{ transition: 'background 150ms ease' }}
+      style={{ transition: 'background 200ms var(--ease)' }}
       onMouseOver={(e) => (e.currentTarget.style.background = 'var(--bg-hover)')}
       onMouseOut={(e) => (e.currentTarget.style.background = 'transparent')}
     >
@@ -44,21 +44,21 @@ export default function SidebarRepCard({ rep }) {
             src={rep.avatar}
             alt={rep.name}
             className="w-11 h-11 rounded-full object-cover shrink-0"
-            style={{ boxShadow: '0 0 0 1px var(--hairline)' }}
+            style={{ boxShadow: '0 0 0 1px var(--line-dark)' }}
           />
         ) : (
           <div
             className="w-11 h-11 rounded-full flex items-center justify-center shrink-0"
-            style={{ background: 'var(--bg-hover)', color: 'var(--text-mid)', fontSize: 13, fontWeight: 650 }}
+            style={{ background: 'var(--bg-hover)', color: 'var(--text-mid)', fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 600 }}
           >
             {getInitials(rep.name)}
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="leading-tight truncate" style={{ color: 'var(--text-hi)', fontSize: 13.5, fontWeight: 600, letterSpacing: '-0.01em' }}>
+          <p className="leading-tight truncate" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-hi)', fontSize: 14, fontWeight: 600, letterSpacing: '-0.015em' }}>
             {rep.name}
           </p>
-          <p className="mt-1 flex items-center gap-1.5 truncate" style={{ color: 'var(--text-mid)', fontSize: 11, fontWeight: 450 }}>
+          <p className="mt-1 flex items-center gap-1.5 truncate" style={{ color: 'var(--text-mid)', fontSize: 11, fontWeight: 400 }}>
             <span className="inline-block w-2 h-2 rounded-[3px] shrink-0" style={{ background: rep.color }} />
             <span className="truncate">{rep.region}</span>
           </p>
@@ -69,7 +69,7 @@ export default function SidebarRepCard({ rep }) {
         <a
           href={`tel:${rep.phone.replace(/\s/g, '')}`}
           className="flex items-center gap-2"
-          style={{ color: 'var(--text-mid)', fontSize: 12, fontVariantNumeric: 'tabular-nums', transition: 'color 150ms ease' }}
+          style={{ color: 'var(--text-mid)', fontSize: 12, fontVariantNumeric: 'tabular-nums', transition: 'color 200ms var(--ease)' }}
           onMouseOver={(e) => (e.currentTarget.style.color = 'var(--text-hi)')}
           onMouseOut={(e) => (e.currentTarget.style.color = 'var(--text-mid)')}
         >
@@ -79,7 +79,7 @@ export default function SidebarRepCard({ rep }) {
         <a
           href={`mailto:${rep.email}`}
           className="flex items-center gap-2 truncate"
-          style={{ color: 'var(--text-mid)', fontSize: 12, transition: 'color 150ms ease' }}
+          style={{ color: 'var(--text-mid)', fontSize: 12, transition: 'color 200ms var(--ease)' }}
           onMouseOver={(e) => (e.currentTarget.style.color = 'var(--text-hi)')}
           onMouseOut={(e) => (e.currentTarget.style.color = 'var(--text-mid)')}
         >

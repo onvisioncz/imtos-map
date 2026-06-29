@@ -46,7 +46,7 @@ function MobileRepCard({ rep }) {
         scrollSnapAlign: 'center',
         width: 'calc(100vw - 56px)',
         background: 'var(--bg-header)',
-        border: '1px solid var(--hairline)',
+        border: '1px solid var(--line-dark)',
       }}
     >
       <div className="flex items-center gap-3 px-4 pt-3 pb-2.5">
@@ -55,27 +55,27 @@ function MobileRepCard({ rep }) {
             src={rep.avatar}
             alt={rep.name}
             className="w-12 h-12 rounded-full object-cover shrink-0"
-            style={{ boxShadow: '0 0 0 1px var(--hairline)' }}
+            style={{ boxShadow: '0 0 0 1px var(--line-dark)' }}
           />
         ) : (
           <div
             className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
-            style={{ background: 'var(--bg-hover)', color: 'var(--text-mid)', fontSize: 15, fontWeight: 650 }}
+            style={{ background: 'var(--bg-hover)', color: 'var(--text-mid)', fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 600 }}
           >
             {getInitials(rep.name)}
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="leading-tight" style={{ color: 'var(--text-hi)', fontSize: 14.5, fontWeight: 600, letterSpacing: '-0.01em' }}>
+          <p className="leading-tight" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-hi)', fontSize: 15, fontWeight: 600, letterSpacing: '-0.015em' }}>
             {rep.name}
           </p>
-          <p className="mt-1 flex items-center gap-1.5 truncate" style={{ color: 'var(--text-mid)', fontSize: 11.5, fontWeight: 450 }}>
+          <p className="mt-1 flex items-center gap-1.5 truncate" style={{ color: 'var(--text-mid)', fontSize: 11.5, fontWeight: 400 }}>
             <span className="inline-block w-2 h-2 rounded-[3px] shrink-0" style={{ background: rep.color }} />
             <span className="truncate">{rep.region}</span>
           </p>
         </div>
       </div>
-      <div className="px-4 pb-3.5 pt-2.5 space-y-1.5" style={{ borderTop: '1px solid var(--hairline-soft)' }}>
+      <div className="px-4 pb-3.5 pt-2.5 space-y-1.5" style={{ borderTop: '1px solid var(--line-dark-soft)' }}>
         <a href={`tel:${rep.phone.replace(/\s/g, '')}`} className="flex items-center gap-2.5" style={{ color: 'var(--text-mid)', fontSize: 13.5, fontVariantNumeric: 'tabular-nums' }}>
           <PhoneIcon color="var(--text-low)" size={13} />
           {rep.phone}
