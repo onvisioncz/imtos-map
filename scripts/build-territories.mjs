@@ -227,16 +227,18 @@ const eurostat = await res.json();
 
 const SK_GROUPS = {
   zilinka: {
-    name: 'Západné Slovensko',
+    name: 'Západné a severozápadné Slovensko',
     reps: ['zilinka'],
-    psc: 'SK: západ',
-    nuts: ['SK010', 'SK021', 'SK022', 'SK023'],
+    psc: 'SK: západ + Žilinský kraj',
+    // Bratislavský + Trnavský + Trenčiansky + Nitriansky + Žilinský kraj
+    nuts: ['SK010', 'SK021', 'SK022', 'SK023', 'SK031'],
   },
   kaizer: {
     name: 'Stredné a východné Slovensko',
     reps: ['kaizer'],
     psc: 'SK: stred + východ',
-    nuts: ['SK031', 'SK032', 'SK041', 'SK042'],
+    // Banskobystrický + Prešovský + Košický kraj
+    nuts: ['SK032', 'SK041', 'SK042'],
   },
 };
 
