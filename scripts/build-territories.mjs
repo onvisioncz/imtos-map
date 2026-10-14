@@ -217,54 +217,52 @@ for (const [id, t] of Object.entries(TERRITORIES)) {
   proFeature.geometry = proGeom.geometry;
 }
 
-// ── Slovakia: NUTS3 kraje from Eurostat ──
-console.log('Fetching SK kraje from Eurostat…');
-const EUROSTAT_URL =
-  'https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/NUTS_RG_01M_2021_4326_LEVL_3.geojson';
-const res = await fetch(EUROSTAT_URL);
-if (!res.ok) throw new Error(`Eurostat ${res.status}`);
-const eurostat = await res.json();
-
-// Rozdělení SK po OKRESECH (dle mapy od Petra Teverného):
-// Žilinka = Bratislavský + Trnavský + Žilinský kraj + Trenčiansky BEZ Prievidze + okres Topoľčany
-// Kaizer  = Nitriansky BEZ Topoľčan + okres Prievidza + Banskobystrický + Prešovský + Košický
+// ── Slovensko po OKRESECH (dle mapy od Petra Teverného) ──
+// Žilinka = Bratislavský + Trnavský + Trenčiansky BEZ Prievidze + Žilinský BEZ Turč. Teplic + okres Topoľčany
+// Kaizer  = všechny ostatní okresy (Nitriansky BEZ Topoľčan, Prievidza, Turčianske Teplice, BB, PO, KE)
 const SK_GROUPS = {
   zilinka: {
     name: 'Západné a severozápadné Slovensko',
     reps: ['zilinka'],
-    psc: 'SK: BA, TT, TN (bez Prievidze), ZA + Topoľčany',
-    nuts: ['SK010', 'SK021', 'SK022', 'SK031'],
+    psc: 'SK: BA, TT, TN (bez Prievidze), ZA (bez Turč. Teplic) + Topoľčany',
   },
   kaizer: {
     name: 'Stredné a východné Slovensko',
     reps: ['kaizer'],
-    psc: 'SK: NR (bez Topoľčan), Prievidza, BB, PO, KE',
-    nuts: ['SK023', 'SK032', 'SK041', 'SK042'],
+    psc: 'SK: NR (bez Topoľčan), Prievidza, Turč. Teplice, BB, PO, KE',
   },
 };
-// Okresy, které přecházejí mimo svůj kraj (názvy v datech mají poškozenou diakritiku)
-const SK_OVERRIDES = [
-  { match: /Prievidza/i, to: 'kaizer' },
-  { match: /Topol/i, to: 'zilinka' },
+
+// Žilinkovy okresy — přesně tak, jak jsou zapsané v geoBoundaries (bez „District of",
+// s poškozenou diakritikou ze zdroje: Pilina = Žilina, Prchov = Púchov, Gala = Šaľa…)
+const ZILINKA_DISTRICTS = [
+  // Bratislavský kraj
+  'Bratislava I', 'Bratislava II', 'Bratislava III', 'Bratislava IV', 'Bratislava V',
+  'Malacky', 'Pezinok', 'Senec',
+  // Trnavský kraj
+  'Dunajskn Streda', 'Galanta', 'Hlohovec', 'Piertany', 'Senica', 'Skalica', 'Trnava',
+  // Trenčiansky kraj (bez Prievidze)
+  'Bonovce nad Bebra*', 'Ilava', 'Myjava', 'Nova Mesto nad Va*', 'Partizonske',
+  'Povacskn Bystrica', 'Prchov', 'Trencon',
+  // Žilinský kraj (bez Turčianskych Teplíc)
+  'Bytca', 'Cadca', 'Dolne Kub', 'Kysucki Novi Mesto', 'Liptovsk', 'Martin',
+  'Numestovo', 'Ruromberok', 'Tvrdo', 'Pilina',
+  // Nitriansky kraj — jen Topoľčany
+  'Topolcany',
 ];
 
 const skDistricts = JSON.parse(
   fs.readFileSync('geodata-src/sk/geoBoundaries-SVK-ADM2.geojson', 'utf8')
 ).features;
-const skKraje = eurostat.features.filter((f) => f.properties.CNTR_CODE === 'SK');
+const skNames = skDistricts.map((d) => d.properties.shapeName.replace(/^District of /, ''));
+const unknownSk = ZILINKA_DISTRICTS.filter((n) => !skNames.includes(n));
+if (unknownSk.length) throw new Error(`Neznámé SK okresy: ${unknownSk.join(', ')}`);
 
 const skBuckets = { zilinka: [], kaizer: [] };
-for (const d of skDistricts) {
-  const name = d.properties.shapeName;
-  let group = SK_OVERRIDES.find((o) => o.match.test(name))?.to;
-  if (!group) {
-    const pt = turf.pointOnFeature(turf.feature(d.geometry));
-    const kraj = skKraje.find((k) => turf.booleanPointInPolygon(pt, turf.feature(k.geometry)));
-    if (!kraj) throw new Error(`SK okres bez kraje: ${name}`);
-    group = Object.keys(SK_GROUPS).find((g) => SK_GROUPS[g].nuts.includes(kraj.properties.NUTS_ID));
-  }
+skDistricts.forEach((d, i) => {
+  const group = ZILINKA_DISTRICTS.includes(skNames[i]) ? 'zilinka' : 'kaizer';
   skBuckets[group].push(turf.feature(d.geometry));
-}
+});
 
 for (const [id, g] of Object.entries(SK_GROUPS)) {
   console.log(`Merging ${id}: ${skBuckets[id].length} okresov…`);
