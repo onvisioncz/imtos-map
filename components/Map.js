@@ -96,24 +96,23 @@ export default function MapComponent() {
 
       mapRef.current = map;
 
-      // Base tiles WITHOUT labels — colors stay clean
+      // Podklad BEZ popisků (Esri Light Gray — CARTO nově vyžaduje API klíč)
       const tileLayer = L.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
         {
-          attribution:
-            '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/attributions">CARTO</a>',
-          subdomains: 'abcd',
+          attribution: 'Tiles © <a href="https://www.esri.com">Esri</a> — Esri, HERE, Garmin, © OpenStreetMap',
+          maxNativeZoom: 16,
           maxZoom: 19,
         }
       ).addTo(map);
 
-      // Detailed place labels — shown only in focus mode
+      // Popisky měst a obcí — jen v detailu oblasti
       map.createPane('labels');
       map.getPane('labels').style.zIndex = 640;
       map.getPane('labels').style.pointerEvents = 'none';
       const labelsLayer = L.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
-        { subdomains: 'abcd', maxZoom: 19, pane: 'labels' }
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+        { maxNativeZoom: 16, maxZoom: 19, pane: 'labels' }
       );
 
       // Cities pane ABOVE the colored territories
