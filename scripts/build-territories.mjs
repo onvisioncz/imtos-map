@@ -225,31 +225,52 @@ const res = await fetch(EUROSTAT_URL);
 if (!res.ok) throw new Error(`Eurostat ${res.status}`);
 const eurostat = await res.json();
 
+// Rozdělení SK po OKRESECH (dle mapy od Petra Teverného):
+// Žilinka = Bratislavský + Trnavský + Žilinský kraj + Trenčiansky BEZ Prievidze + okres Topoľčany
+// Kaizer  = Nitriansky BEZ Topoľčan + okres Prievidza + Banskobystrický + Prešovský + Košický
 const SK_GROUPS = {
   zilinka: {
     name: 'Západné a severozápadné Slovensko',
     reps: ['zilinka'],
-    psc: 'SK: západ + Žilinský kraj',
-    // Bratislavský + Trnavský + Trenčiansky + Nitriansky + Žilinský kraj
-    nuts: ['SK010', 'SK021', 'SK022', 'SK023', 'SK031'],
+    psc: 'SK: BA, TT, TN (bez Prievidze), ZA + Topoľčany',
+    nuts: ['SK010', 'SK021', 'SK022', 'SK031'],
   },
   kaizer: {
     name: 'Stredné a východné Slovensko',
     reps: ['kaizer'],
-    psc: 'SK: stred + východ',
-    // Banskobystrický + Prešovský + Košický kraj
-    nuts: ['SK032', 'SK041', 'SK042'],
+    psc: 'SK: NR (bez Topoľčan), Prievidza, BB, PO, KE',
+    nuts: ['SK023', 'SK032', 'SK041', 'SK042'],
   },
 };
+// Okresy, které přecházejí mimo svůj kraj (názvy v datech mají poškozenou diakritiku)
+const SK_OVERRIDES = [
+  { match: /Prievidza/i, to: 'kaizer' },
+  { match: /Topol/i, to: 'zilinka' },
+];
+
+const skDistricts = JSON.parse(
+  fs.readFileSync('geodata-src/sk/geoBoundaries-SVK-ADM2.geojson', 'utf8')
+).features;
+const skKraje = eurostat.features.filter((f) => f.properties.CNTR_CODE === 'SK');
+
+const skBuckets = { zilinka: [], kaizer: [] };
+for (const d of skDistricts) {
+  const name = d.properties.shapeName;
+  let group = SK_OVERRIDES.find((o) => o.match.test(name))?.to;
+  if (!group) {
+    const pt = turf.pointOnFeature(turf.feature(d.geometry));
+    const kraj = skKraje.find((k) => turf.booleanPointInPolygon(pt, turf.feature(k.geometry)));
+    if (!kraj) throw new Error(`SK okres bez kraje: ${name}`);
+    group = Object.keys(SK_GROUPS).find((g) => SK_GROUPS[g].nuts.includes(kraj.properties.NUTS_ID));
+  }
+  skBuckets[group].push(turf.feature(d.geometry));
+}
 
 for (const [id, g] of Object.entries(SK_GROUPS)) {
-  const feats = eurostat.features
-    .filter((f) => g.nuts.includes(f.properties.NUTS_ID))
-    .map((f) => turf.feature(f.geometry));
-  if (feats.length !== g.nuts.length) throw new Error(`SK group ${id}: expected ${g.nuts.length}, got ${feats.length}`);
-  console.log(`Merging ${id}: ${feats.length} krajov…`);
-  let merged = dissolve(feats);
-  merged = turf.simplify(merged, { tolerance: 0.0015, highQuality: true });
+  console.log(`Merging ${id}: ${skBuckets[id].length} okresov…`);
+  let merged = dissolve(skBuckets[id]);
+  merged = turf.feature(stripHoles(merged.geometry));
+  merged = turf.simplify(merged, { tolerance: 0.0006, highQuality: true });
   turf.truncate(merged, { precision: 5, coordinates: 2, mutate: true });
   outFeatures.push({
     type: 'Feature',
